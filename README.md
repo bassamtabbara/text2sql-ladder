@@ -32,9 +32,10 @@ so these are directly comparable.
 
 | Rung | Technique | EX % | Valid-SQL % | p50 latency | Notes |
 |------|-----------|:----:|:-----------:|:-----------:|-------|
-| 0 | zero-shot | | | | |
-| 0 | few-shot | | | | |
-| 0 | few-shot + RAG | | | | |
+| 0 | _frontier reference (Opus 4.8, few-shot+RAG)_ | | | | ceiling to chase, not the baseline |
+| 0 | zero-shot (base Qwen) | | | | fine-tuning baseline |
+| 0 | few-shot (base Qwen) | | | | fine-tuning baseline |
+| 0 | few-shot + RAG (base Qwen) | | | | fine-tuning baseline |
 | 1 | vendor fine-tune | | | | |
 | 2a | QLoRA | | | | |
 | 2b | full fine-tune | | | | |

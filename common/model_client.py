@@ -57,7 +57,12 @@ def extract_sql(text: str) -> str:
 
 
 class ChatClient:
-    """Thin wrapper over an OpenAI-compatible chat endpoint (works for OpenAI, vLLM, etc.)."""
+    """Thin wrapper over an OpenAI-compatible chat endpoint (works for OpenAI, vLLM, etc.).
+
+    Frontier reference line (rung 0): Anthropic exposes an OpenAI-compatible endpoint, so Opus 4.8
+    works here unchanged -- pass base_url="https://api.anthropic.com/v1/", model="claude-opus-4-8",
+    and the Anthropic key as api_key (or via OPENAI_API_KEY).
+    """
 
     def __init__(self, model: str, base_url: str | None = None, api_key: str | None = None,
                  temperature: float = 0.0, max_tokens: int = 512):

@@ -52,6 +52,8 @@ def main() -> None:
     ap.add_argument("--k", type=int, default=5, help="number of shots for few-shot / rag")
     ap.add_argument("--model", default="Qwen/Qwen2.5-3B-Instruct")
     ap.add_argument("--base-url", default="http://localhost:8000/v1")
+    ap.add_argument("--label", default=None,
+                    help="override the technique label (e.g. frontier-opus4.8); defaults to --mode")
     args = ap.parse_args()
 
     if args.mode == "zero-shot":
@@ -66,7 +68,8 @@ def main() -> None:
 
     client = ChatClient(model=args.model, base_url=args.base_url)
     metrics = run_eval(client, load_dev_subset(), few_shot_fn=few_shot_fn)
-    record_result("0", args.mode, metrics, args.model,
+    technique = args.label or args.mode
+    record_result("0", technique, metrics, args.model,
                   notes=f"k={args.k}" if args.mode != "zero-shot" else "")
 
 
