@@ -1,0 +1,6 @@
+{
+  "_comment": "PLACEHOLDER. Generate the real frozen dev subset once, after downloading data, with: python -m common.data build  (writes 300 indices at seed=0). Commit the result so every rung evaluates on the identical split.",
+  "seed": 0,
+  "n": 0,
+  "indices": []
+}

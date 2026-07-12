@@ -1,0 +1,28 @@
+# Illustrative GBNF grammar for a subset of SQLite SELECT statements.
+# Constrained decoding forces the model to emit only strings this grammar accepts, which pushes
+# valid-SQL rate toward 100% with no weight change. This subset covers the common Spider shapes
+# (SELECT ... FROM ... [JOIN] [WHERE] [GROUP BY] [HAVING] [ORDER BY] [LIMIT]); expand it as needed
+# to cover more of your traffic. Correctness (right rows) still depends on the model; the grammar
+# only guarantees the query parses.
+
+root        ::= select ws? ";"?
+select      ::= "SELECT" ws distinct? cols ws "FROM" ws source join* where? groupby? having? orderby? limit?
+distinct    ::= "DISTINCT" ws
+cols        ::= "*" | collist
+collist     ::= expr (ws? "," ws? expr)*
+source      ::= name (ws "AS"? ws? name)?
+join        ::= ws ("JOIN" | "LEFT JOIN" | "INNER JOIN") ws source ws "ON" ws condition
+where       ::= ws "WHERE" ws condition
+groupby     ::= ws "GROUP BY" ws collist
+having      ::= ws "HAVING" ws condition
+orderby     ::= ws "ORDER BY" ws expr (ws ("ASC" | "DESC"))?
+limit       ::= ws "LIMIT" ws number
+condition   ::= expr ws? op ws? expr (ws ("AND" | "OR") ws condition)?
+op          ::= "=" | "!=" | "<>" | "<" | ">" | "<=" | ">=" | "LIKE" | "IN"
+expr        ::= func | qualified | name | number | string
+func        ::= ("COUNT" | "SUM" | "AVG" | "MIN" | "MAX") "(" ws? (("*") | expr) ws? ")"
+qualified   ::= name "." name
+name        ::= [a-zA-Z_] [a-zA-Z0-9_]*
+number      ::= [0-9]+ ("." [0-9]+)?
+string      ::= "'" [^']* "'"
+ws          ::= " "+
