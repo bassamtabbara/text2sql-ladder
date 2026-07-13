@@ -15,6 +15,18 @@ OpenAI is winding new fine-tuning down, with new orgs locked out after May 2026.
 someone else's API. This rung is the argument for open weights, and the reason the journey continues
 to rung 2.
 
+**The door may already be closed (and that IS the lesson).** As of mid-2026 OpenAI has wound its
+fine-tuning platform down: job creation returns `403 training_not_available` for orgs that can no
+longer use it. When that happens, `run.sh` still records the `base-mini` baseline first, then prints
+the refusal and stops. A blocked fine-tune is a *stronger* rung-1 result than a successful one: the
+customization you rented can be revoked from under you, which is precisely why the next rung is to
+own the weights.
+
+If you want an actual managed-fine-tune lift number anyway, other vendors still offer hosted tuning
+(same "you don't get the weights" property): **AWS Bedrock** (Nova / Llama / Cohere), **Google
+Vertex AI** (Gemini Flash), **Mistral La Plateforme**, **Cohere**, or **Azure OpenAI** (separate
+governance from openai.com). Point a small adapter of this script at whichever you have access to.
+
 **Artifact.** Customized weights you can't hold, portable nowhere.
 
 Run:

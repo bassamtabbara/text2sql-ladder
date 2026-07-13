@@ -61,9 +61,20 @@ def main() -> None:
 
     ft_model = args.ft_model
     if ft_model is None:
-        path = build_jsonl(args.n, args.jsonl)
-        up = client.files.create(file=open(path, "rb"), purpose="fine-tune")
-        job = client.fine_tuning.jobs.create(training_file=up.id, model=args.base_model)
+        try:
+            path = build_jsonl(args.n, args.jsonl)
+            up = client.files.create(file=open(path, "rb"), purpose="fine-tune")
+            job = client.fine_tuning.jobs.create(training_file=up.id, model=args.base_model)
+        except Exception as exc:  # noqa: BLE001
+            # The rented-customization door. Some vendors have wound fine-tuning down (OpenAI stopped
+            # letting new orgs create jobs after May 2026). This refusal IS rung 1's lesson, not a
+            # bug: your ability to customize a hosted model can simply be revoked. The base-mini
+            # baseline above is already recorded, so there is nothing more to run here.
+            print("\n=== Rung 1: vendor fine-tuning unavailable ===")
+            print(f"{type(exc).__name__}: {exc}")
+            print("This refusal is the lesson. It is the argument for open weights (rung 2). See "
+                  "rung1-vendor-ft/README.md for managed-FT alternatives if you want a lift number.")
+            return
         print(f"created job {job.id}; polling...")
         while True:
             job = client.fine_tuning.jobs.retrieve(job.id)
