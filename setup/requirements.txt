@@ -15,7 +15,7 @@ unsloth==2025.1.5
 
 # serving + eval client (rungs 0, 1, and all serving rungs)
 vllm==0.6.6.post1
-openai==1.59.0
+openai==1.60.1
 
 # RAG retrieval (rung 0)
 sentence-transformers==3.3.1
