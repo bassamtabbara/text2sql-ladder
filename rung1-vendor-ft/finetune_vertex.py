@@ -5,12 +5,17 @@ working "what does vendor fine-tuning buy" number comes from Vertex. The rung-1 
 the tuned weights live inside Vertex, you don't get to download them.
 
 Gemini Flash also appears untuned in rung 0, so the comparison here is clean and within-model:
-  1, base-gemini    -- untuned gemini-3.5-flash, zero-shot
+  1, base-gemini      -- untuned model, zero-shot
   1, vendor-ft-gemini -- the SFT'd model, zero-shot
 Both go through the frozen run_eval/record_result, scored on the same dev split as every other rung.
 
-Requires GCP: application-default credentials (or a service account), GOOGLE_CLOUD_PROJECT,
-VERTEX_LOCATION, and a writable GCS bucket (T2S_GCS_BUCKET) for the training JSONL.
+Uses the google-genai SDK (the supported one; the older vertexai.generative_models SDK is retired
+and only hits regional endpoints, which 404 for models served via the `global` endpoint).
+
+Requires GCP: application-default credentials (or a service account via GOOGLE_APPLICATION_CREDENTIALS),
+GOOGLE_CLOUD_PROJECT, and a writable GCS bucket (T2S_GCS_BUCKET). Inference for the base model runs
+against VERTEX_INFER_LOCATION (default `global`); tuning and the tuned model run in VERTEX_LOCATION
+(default `us-central1`).
 """
 
 from __future__ import annotations
@@ -52,20 +57,22 @@ def upload_to_gcs(local_path: str, bucket: str, blob_name: str) -> str:
     return uri
 
 
-class VertexChatClient:
-    """Adapter so the frozen run_eval can drive a Vertex Gemini model (base or tuned).
+class VertexGenAIClient:
+    """Adapter so the frozen run_eval can drive a Gemini model (base or tuned) via google-genai.
 
     Implements .complete(messages) by translating OpenAI-style chat messages into Gemini's
-    system_instruction + contents, and returning the raw text (run_eval extracts the SQL).
+    system_instruction + contents, returning raw text (run_eval extracts the SQL).
     """
 
-    def __init__(self, model_name: str, temperature: float = 0.0, max_tokens: int = 512):
+    def __init__(self, genai_client, model_name: str, temperature: float = 0.0,
+                 max_tokens: int = 512):
+        self._client = genai_client
         self.model_name = model_name
         self.temperature = temperature
         self.max_tokens = max_tokens
 
     def complete(self, messages: list[dict], **_overrides) -> str:
-        from vertexai.generative_models import GenerationConfig, GenerativeModel
+        from google.genai import types
 
         system = next((m["content"] for m in messages if m["role"] == "system"), None)
         contents = [
@@ -73,14 +80,19 @@ class VertexChatClient:
              "parts": [{"text": m["content"]}]}
             for m in messages if m["role"] != "system"
         ]
-        model = GenerativeModel(self.model_name, system_instruction=system) if system \
-            else GenerativeModel(self.model_name)
-        resp = model.generate_content(
-            contents,
-            generation_config=GenerationConfig(
-                temperature=self.temperature, max_output_tokens=self.max_tokens),
+        resp = self._client.models.generate_content(
+            model=self.model_name,
+            contents=contents,
+            config=types.GenerateContentConfig(
+                system_instruction=system,
+                temperature=self.temperature,
+                max_output_tokens=self.max_tokens,
+            ),
         )
         return resp.text or ""
+
+
+_RUNNING = {"JOB_STATE_PENDING", "JOB_STATE_RUNNING", "JOB_STATE_QUEUED", "JOB_STATE_UPDATING"}
 
 
 def main() -> None:
@@ -91,46 +103,56 @@ def main() -> None:
     ap.add_argument("--epochs", type=int, default=3)
     ap.add_argument("--jsonl", default="rung1-vendor-ft/vertex_train.jsonl")
     ap.add_argument("--tuned-endpoint", default=None,
-                    help="skip tuning and evaluate an already-tuned endpoint name")
+                    help="skip tuning and evaluate an already-tuned endpoint/model name")
     args = ap.parse_args()
 
     project = os.environ["GOOGLE_CLOUD_PROJECT"]
-    location = os.environ.get("VERTEX_LOCATION", "us-central1")
+    tune_location = os.environ.get("VERTEX_LOCATION", "us-central1")
+    infer_location = os.environ.get("VERTEX_INFER_LOCATION", "global")
     bucket = os.environ["T2S_GCS_BUCKET"]
 
-    import vertexai
-    from vertexai.tuning import sft
+    from google import genai
+    from google.genai import types
 
-    vertexai.init(project=project, location=location)
     dev = load_dev_subset()
 
-    # 1. Within-model baseline: untuned model, zero-shot. This is the fair "before".
-    base_metrics = run_eval(VertexChatClient(args.model), dev)
+    # 1. Within-model baseline: untuned model, zero-shot. Base models serve from the global endpoint.
+    infer_client = genai.Client(vertexai=True, project=project, location=infer_location)
+    base_metrics = run_eval(VertexGenAIClient(infer_client, args.model), dev)
     record_result("1", "base-gemini", base_metrics, args.model, notes="zero-shot, no fine-tune")
 
-    # 2. Supervised fine-tune (unless an already-tuned endpoint was passed).
+    # 2. Supervised fine-tune in a region (unless an already-tuned endpoint was passed).
     tuned_endpoint = args.tuned_endpoint
     if tuned_endpoint is None:
         gcs_uri = upload_to_gcs(build_vertex_jsonl(args.n, args.jsonl), bucket,
                                 "text2sql-ladder/vertex_train.jsonl")
-        print(f"launching SFT on {args.model} ({args.epochs} epochs)...")
-        job = sft.train(
-            source_model=args.model,
-            train_dataset=gcs_uri,
-            epochs=args.epochs,
-            tuned_model_display_name="text2sql-gemini-sft",
-        )
-        while not job.has_ended:
+        tune_client = genai.Client(vertexai=True, project=project, location=tune_location)
+        print(f"launching SFT on {args.model} in {tune_location} ({args.epochs} epochs)...")
+        try:
+            job = tune_client.tunings.tune(
+                base_model=args.model,
+                training_dataset=types.TuningDataset(gcs_uri=gcs_uri),
+                config=types.CreateTuningJobConfig(
+                    epoch_count=args.epochs, tuned_model_display_name="text2sql-gemini-sft"),
+            )
+        except Exception as exc:  # noqa: BLE001
+            print(f"could not start tuning for {args.model}: {exc}")
+            print("If this is a 'model not tunable' error, set VERTEX_MODEL to a tunable id "
+                  "(e.g. gemini-2.5-flash) and re-run. base-gemini is already recorded.")
+            return
+        while str(job.state).split(".")[-1] in _RUNNING:
             time.sleep(60)
-            job.refresh()
-            print(f"  tuning state: {job.state}")
-        if not job.has_succeeded:
-            raise SystemExit(f"tuning job did not succeed: {job.state}")
-        tuned_endpoint = job.tuned_model_endpoint_name
-        print(f"tuned model endpoint: {tuned_endpoint}  (note: weights stay in Vertex)")
+            job = tune_client.tunings.get(name=job.name)
+            print(f"  tuning: {job.state}")
+        if not str(job.state).split(".")[-1].endswith("SUCCEEDED"):
+            raise SystemExit(f"tuning did not succeed: {job.state}")
+        tuned_endpoint = getattr(job.tuned_model, "endpoint", None) \
+            or getattr(job.tuned_model, "model", None)
+        print(f"tuned endpoint: {tuned_endpoint}  (note: weights stay in Vertex)")
 
-    # 3. Evaluate the tuned model, zero-shot -- same inference as the baseline, so the delta is FT.
-    tuned_metrics = run_eval(VertexChatClient(tuned_endpoint), dev)
+    # 3. Evaluate the tuned model, zero-shot, in its region -- same inference as the baseline.
+    tuned_client = genai.Client(vertexai=True, project=project, location=tune_location)
+    tuned_metrics = run_eval(VertexGenAIClient(tuned_client, tuned_endpoint), dev)
     record_result("1", "vendor-ft-gemini", tuned_metrics, args.model,
                   notes=f"SFT on Vertex, n={args.n}, epochs={args.epochs}, weights not portable")
 
