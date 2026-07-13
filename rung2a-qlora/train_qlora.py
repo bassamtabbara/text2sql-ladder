@@ -42,10 +42,16 @@ def main() -> None:
     import torch
     from peft import LoraConfig
     from transformers import AutoTokenizer, BitsAndBytesConfig
-    from trl import SFTConfig, SFTTrainer
+    from trl import DataCollatorForCompletionOnlyLM, SFTConfig, SFTTrainer
 
     tokenizer = AutoTokenizer.from_pretrained(args.base)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
     dataset = build_dataset(tokenizer)
+
+    # Completion-only loss: mask everything before the assistant turn so the model learns to
+    # GENERATE the SQL, not reproduce the schema/question. Qwen2.5's assistant turn opens with this.
+    collator = DataCollatorForCompletionOnlyLM("<|im_start|>assistant\n", tokenizer=tokenizer)
 
     bnb = BitsAndBytesConfig(
         load_in_4bit=True,
@@ -86,6 +92,7 @@ def main() -> None:
         args=cfg,
         train_dataset=dataset,
         peft_config=lora,
+        data_collator=collator,
     )
     trainer.train()
     trainer.save_model(args.out)
