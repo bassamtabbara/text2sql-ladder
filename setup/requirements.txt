@@ -20,6 +20,10 @@ openai==1.60.1
 # RAG retrieval (rung 0)
 sentence-transformers==3.3.1
 
+# Google Vertex AI supervised fine-tuning (rung 1) + GCS for training data
+google-cloud-aiplatform==1.79.0
+google-cloud-storage==2.19.0
+
 # misc
 pyyaml==6.0.2
 tqdm==4.67.1

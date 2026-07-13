@@ -19,19 +19,19 @@ python rung0-prompting/prompt.py --mode zero-shot --model "$MODEL"
 python rung0-prompting/prompt.py --mode few-shot  --k 5 --model "$MODEL"
 python rung0-prompting/prompt.py --mode rag       --k 5 --model "$MODEL"
 
-# --- Frontier REFERENCE line (optional): the strongest model you can rent, few-shot+RAG. This is
-#     "rent the best and prompt it well" -- the ceiling the small owned model chases, NOT the
-#     fine-tuning baseline. Kept on OpenAI so it matches the rung-1 vendor (one vendor, apples to
-#     apples). Override the ceiling with FRONTIER_MODEL=... for a different id.
-FRONTIER_MODEL="${FRONTIER_MODEL:-gpt-5.6-sol}"
-if [ -n "${OPENAI_API_KEY:-}" ]; then
-  python rung0-prompting/prompt.py --mode rag --k 5 \
-    --model "$FRONTIER_MODEL" --base-url https://api.openai.com/v1 \
-    --label "frontier-$FRONTIER_MODEL"
-else
-  echo "(skipping frontier reference: set OPENAI_API_KEY to record the $FRONTIER_MODEL ceiling)"
-fi
+# --- Frontier REFERENCE panel (optional): several rented frontier models, few-shot+RAG, NO tuning.
+#     These are the ceilings the owned model chases, not the fine-tuning baseline. Each runs only if
+#     its key is set; each hits an OpenAI-compatible endpoint so the frozen eval works unchanged.
+#     The client reads OPENAI_API_KEY, so we set it inline to each vendor's key.
+run_frontier () {  # $1=model  $2=base_url  $3=api_key
+  if [ -z "$3" ]; then echo "(skipping frontier $1: key not set)"; return; fi
+  OPENAI_API_KEY="$3" python rung0-prompting/prompt.py --mode rag --k 5 \
+    --model "$1" --base-url "$2" --label "frontier-$1"
+}
+run_frontier "${FRONTIER_OPENAI_MODEL:-gpt-5.6-sol}"     "https://api.openai.com/v1"                                "${OPENAI_API_KEY:-}"
+run_frontier "${FRONTIER_ANTHROPIC_MODEL:-claude-opus-4-8}" "https://api.anthropic.com/v1/"                        "${ANTHROPIC_API_KEY:-}"
+run_frontier "${FRONTIER_GEMINI_MODEL:-gemini-3.5-flash}"   "https://generativelanguage.googleapis.com/v1beta/openai/" "${GEMINI_API_KEY:-}"
 
-echo "Rung 0 complete. results/results.csv now has the base-Qwen baseline (zero/few/rag) plus,"
-echo "if a key was set, the Opus 4.8 reference line. Remember: fine-tuning gains are read against"
-echo "the base-Qwen rows; the frontier row is the ceiling to chase, not the baseline."
+echo "Rung 0 complete. results/results.csv now has the base-Qwen baseline (zero/few/rag) plus a"
+echo "frontier row for each provider key that was set. Fine-tuning gains (rungs 2a-2e) are read"
+echo "against the base-Qwen rows; the frontier rows are the ceiling to chase, not the baseline."

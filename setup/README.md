@@ -60,10 +60,14 @@ and point `T2S_DATA_ROOT` at it for a second eval pass.
 
 | Var | When you actually need it |
 |-----|---------------------------|
-| `T2S_DATA_ROOT` | The dataset folder the code reads (default `data/spider`). Set this once, as in step 2. |
-| `OPENAI_API_KEY` | For rung 0's frontier reference line and for rung 1 (the vendor fine-tune). `export` it before those runs. Leave it unset for local Qwen runs; vLLM ignores the key (the client defaults to `EMPTY`). |
-| `FRONTIER_MODEL` | Optional. Which OpenAI model is the rung-0 ceiling (default `gpt-5.6-sol`; e.g. set `gpt-5-mini`). |
-| `T2S_BASE_URL` | Optional. A fallback eval endpoint used only if a script is invoked without `--base-url`. The rung scripts always pass `--base-url` (local vLLM at `http://localhost:8000/v1`), so you normally never set this. |
+| `T2S_DATA_ROOT` | The dataset folder the code reads (default `data/spider`). Set this once, as in step 2. Only one that matters for local Qwen runs. |
+| `OPENAI_API_KEY` | rung-0 `gpt-5.6-sol` frontier row (and the optional rung-1 OpenAI "closed door" aside). Unset for local Qwen runs; vLLM ignores the key (client defaults to `EMPTY`). |
+| `ANTHROPIC_API_KEY` | rung-0 `claude-opus-4-8` frontier row. |
+| `GEMINI_API_KEY` | rung-0 `gemini-3.5-flash` frontier row (an AI Studio key). |
+| GCP creds + `GOOGLE_CLOUD_PROJECT`, `VERTEX_LOCATION`, `T2S_GCS_BUCKET` | rung-1 Gemini SFT on Vertex. Authenticate with `gcloud auth application-default login` (or a service-account JSON via `GOOGLE_APPLICATION_CREDENTIALS`); `VERTEX_LOCATION` defaults to `us-central1`; the bucket must be writable for the training JSONL. |
+| model overrides | `FRONTIER_OPENAI_MODEL` / `FRONTIER_ANTHROPIC_MODEL` / `FRONTIER_GEMINI_MODEL` (rung 0) and `VERTEX_MODEL` (rung 1). Defaults: `gpt-5.6-sol` / `claude-opus-4-8` / `gemini-3.5-flash`. |
+| `T2S_REASONING_EFFORT` | Optional. Reasoning effort for gpt-5*/o-series frontier calls (default `high`; `low`/`medium` for speed). |
+| `T2S_BASE_URL` | Optional fallback eval endpoint, used only if a script is invoked without `--base-url`. Rung scripts always pass `--base-url`, so you normally never set this. |
 
-So for rung 0: set `T2S_DATA_ROOT` (done in step 2) and, if you want the frontier line,
-`OPENAI_API_KEY`. Nothing else.
+Each rung-0 frontier row runs only if its key is set, so you can do one, two, or all three. Local
+Qwen runs need only `T2S_DATA_ROOT`.
