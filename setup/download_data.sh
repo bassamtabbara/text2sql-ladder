@@ -57,5 +57,7 @@ PY
 echo "==> Building the FROZEN dev subset (300 examples, seed=0)"
 python -m common.data build
 
-echo "Done. Remember to commit common/dev_set.json so the dev split is frozen for everyone."
+echo "Done. common/dev_set.json is built deterministically (seed=0), so this exact split"
+echo "regenerates for anyone who runs this script. Committing it is optional (nice for readers,"
+echo "not required for your own runs)."
 echo "(BIRD is optional and larger; see setup/README.md if you want the harder held-out slice.)"
