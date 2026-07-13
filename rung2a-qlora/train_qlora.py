@@ -82,7 +82,9 @@ def main() -> None:
         gradient_checkpointing_kwargs={"use_reentrant": False},
         seed=args.seed,
         dataset_text_field="text",
-        max_seq_length=2048,
+        # 4096 so large Spider schemas aren't right-truncated (which would cut the SQL off the end
+        # and make the completion-only collator drop the example from the loss)
+        max_seq_length=4096,
         # in current TRL, model-load kwargs live in the config, not SFTTrainer.__init__
         model_init_kwargs={"quantization_config": bnb, "torch_dtype": torch.bfloat16},
         report_to="none",
