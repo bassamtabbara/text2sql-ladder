@@ -55,13 +55,14 @@ def main() -> None:
         seed=args.seed,
         dataset_text_field="text",
         max_seq_length=2048,
+        # in current TRL, model-load kwargs live in the config, not SFTTrainer.__init__
+        model_init_kwargs={"torch_dtype": torch.bfloat16},
         report_to="none",
     )
     trainer = SFTTrainer(
         model=args.base,
         args=cfg,
         train_dataset=build_corpus(),
-        model_init_kwargs={"torch_dtype": torch.bfloat16},
     )
     trainer.train()
     trainer.save_model(args.out)

@@ -1,1 +1,15 @@
 rung,technique,ex,valid_sql,n,p50_latency_ms,model,notes,run_date
+0,zero-shot,0.6033,0.8567,300,236,Qwen/Qwen2.5-3B-Instruct,,2026-07-13
+0,few-shot,0.6333,0.8733,300,249,Qwen/Qwen2.5-3B-Instruct,k=5,2026-07-13
+0,rag,0.6633,0.8500,300,405,Qwen/Qwen2.5-3B-Instruct,k=5,2026-07-13
+0,frontier-gpt-5.6-sol-zero-shot,0.8367,1.0000,300,3714,gpt-5.6-sol,,2026-07-13
+0,frontier-gpt-5.6-sol-few-shot,0.8267,1.0000,300,3512,gpt-5.6-sol,k=5,2026-07-13
+0,frontier-gpt-5.6-sol-rag,0.8233,1.0000,300,2750,gpt-5.6-sol,k=5,2026-07-13
+0,frontier-claude-opus-4-8-zero-shot,0.9167,0.9967,300,1882,claude-opus-4-8,,2026-07-13
+0,frontier-claude-opus-4-8-few-shot,0.9433,0.9967,300,1992,claude-opus-4-8,k=5,2026-07-13
+0,frontier-claude-opus-4-8-rag,0.9433,1.0000,300,1931,claude-opus-4-8,k=5,2026-07-13
+0,frontier-gemini-3.5-flash-zero-shot,0.5667,0.6367,300,2532,gemini-3.5-flash,,2026-07-13
+0,frontier-gemini-3.5-flash-few-shot,0.7033,0.8200,300,2034,gemini-3.5-flash,k=5,2026-07-13
+0,frontier-gemini-3.5-flash-rag,0.7200,0.8300,300,2031,gemini-3.5-flash,k=5,2026-07-13
+1,base-gemini,0.8367,0.9933,300,883,gemini-3.5-flash,"zero-shot, no fine-tune",2026-07-13
+1,vendor-ft-gemini,0.8800,0.9933,300,1013,gemini-3.5-flash,"SFT on Vertex, n=2000, epochs=3, weights not portable",2026-07-13

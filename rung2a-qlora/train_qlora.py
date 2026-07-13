@@ -75,6 +75,8 @@ def main() -> None:
         seed=args.seed,
         dataset_text_field="text",
         max_seq_length=2048,
+        # in current TRL, model-load kwargs live in the config, not SFTTrainer.__init__
+        model_init_kwargs={"quantization_config": bnb, "torch_dtype": torch.bfloat16},
         report_to="none",
     )
     trainer = SFTTrainer(
@@ -82,7 +84,6 @@ def main() -> None:
         args=cfg,
         train_dataset=dataset,
         peft_config=lora,
-        model_init_kwargs={"quantization_config": bnb, "torch_dtype": torch.bfloat16},
     )
     trainer.train()
     trainer.save_model(args.out)
