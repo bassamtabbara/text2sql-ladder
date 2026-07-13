@@ -1,6 +1,11 @@
 # Pinned for reproducibility. Tested on a single H100 80GB (CUDA 12.x), Python 3.11.
 # Bump deliberately and re-run the affected rungs if you do.
 
+# build/runtime tooling (uv venvs omit these; bitsandbytes' transformers integration imports
+# pkg_resources/setuptools at runtime)
+setuptools>=70
+wheel>=0.43
+
 # core training / modeling
 torch==2.5.1
 transformers==4.48.0
