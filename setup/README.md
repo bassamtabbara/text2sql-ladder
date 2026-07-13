@@ -58,8 +58,12 @@ and point `T2S_DATA_ROOT` at it for a second eval pass.
 
 ## Environment variables
 
-| Var | Meaning |
-|-----|---------|
-| `T2S_DATA_ROOT` | dataset root (default `data/spider`) |
-| `T2S_BASE_URL` | default OpenAI-compatible endpoint for eval (e.g. `http://localhost:8000/v1`) |
-| `OPENAI_API_KEY` | real key for the rung-1 vendor fine-tune; `EMPTY` is fine for local vLLM |
+| Var | When you actually need it |
+|-----|---------------------------|
+| `T2S_DATA_ROOT` | The dataset folder the code reads (default `data/spider`). Set this once, as in step 2. |
+| `ANTHROPIC_API_KEY` | Only for rung 0's Opus 4.8 reference line. `export` it before running `rung0-prompting/run.sh` and the script wires it to Anthropic's OpenAI-compatible endpoint for you. Leave it unset and that one reference row is simply skipped. |
+| `OPENAI_API_KEY` | Only for rung 1 (the vendor fine-tune). Leave it unset for everything else, including all local runs; vLLM ignores the key (the client defaults to `EMPTY`). |
+| `T2S_BASE_URL` | Optional. A fallback eval endpoint used only if a script is invoked without `--base-url`. The rung scripts always pass `--base-url` (local vLLM at `http://localhost:8000/v1`), so you normally never set this. |
+
+So for rung 0: set `T2S_DATA_ROOT` (done in step 2) and, if you want the frontier line,
+`ANTHROPIC_API_KEY`. Nothing else.
