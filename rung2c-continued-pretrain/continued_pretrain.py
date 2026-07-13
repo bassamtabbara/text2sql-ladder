@@ -54,7 +54,9 @@ def main() -> None:
         gradient_checkpointing=True,
         seed=args.seed,
         dataset_text_field="text",
-        max_seq_length=2048,
+        max_seq_length=4096,
+        # NOTE: no completion-only collator here on purpose -- continued pretraining learns from the
+        # whole document (raw schema + SQL text), unlike task fine-tuning which masks the prompt.
         # in current TRL, model-load kwargs live in the config, not SFTTrainer.__init__
         model_init_kwargs={"torch_dtype": torch.bfloat16},
         report_to="none",

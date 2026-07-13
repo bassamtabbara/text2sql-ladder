@@ -53,10 +53,15 @@ def main() -> None:
 
     import torch
     from transformers import AutoTokenizer
-    from trl import SFTConfig, SFTTrainer
+    from trl import DataCollatorForCompletionOnlyLM, SFTConfig, SFTTrainer
 
     tokenizer = AutoTokenizer.from_pretrained(args.base)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
     dataset = build_dataset(tokenizer, args.mix_general)
+
+    # completion-only loss: train on the SQL, not the prompt (Qwen2.5's assistant turn marker)
+    collator = DataCollatorForCompletionOnlyLM("<|im_start|>assistant\n", tokenizer=tokenizer)
 
     cfg = SFTConfig(
         output_dir=args.out,
@@ -71,7 +76,7 @@ def main() -> None:
         gradient_checkpointing=True,
         seed=args.seed,
         dataset_text_field="text",
-        max_seq_length=2048,
+        max_seq_length=4096,   # avoid truncating large Spider schemas (would drop the SQL)
         save_strategy="epoch",
         # in current TRL, model-load kwargs live in the config, not SFTTrainer.__init__
         model_init_kwargs={"torch_dtype": torch.bfloat16},
@@ -81,6 +86,7 @@ def main() -> None:
         model=args.base,
         args=cfg,
         train_dataset=dataset,
+        data_collator=collator,
     )
     trainer.train()
     trainer.save_model(args.out)
