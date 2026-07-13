@@ -95,6 +95,18 @@ class VertexGenAIClient:
 _RUNNING = {"JOB_STATE_PENDING", "JOB_STATE_RUNNING", "JOB_STATE_QUEUED", "JOB_STATE_UPDATING"}
 
 
+def _location_from_resource(resource_name: str, default: str) -> str:
+    """Pull LOC out of a Vertex resource name `projects/P/locations/LOC/...`.
+
+    The tuned endpoint can live in a multi-region (e.g. `us`) rather than the tuning region, and the
+    genai client must be created in that same location or the call 404s.
+    """
+    parts = resource_name.split("/")
+    if "locations" in parts:
+        return parts[parts.index("locations") + 1]
+    return default
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", default=os.environ.get("VERTEX_MODEL", "gemini-3.5-flash"),
@@ -116,14 +128,14 @@ def main() -> None:
 
     dev = load_dev_subset()
 
-    # 1. Within-model baseline: untuned model, zero-shot. Base models serve from the global endpoint.
-    infer_client = genai.Client(vertexai=True, project=project, location=infer_location)
-    base_metrics = run_eval(VertexGenAIClient(infer_client, args.model), dev)
-    record_result("1", "base-gemini", base_metrics, args.model, notes="zero-shot, no fine-tune")
-
-    # 2. Supervised fine-tune in a region (unless an already-tuned endpoint was passed).
     tuned_endpoint = args.tuned_endpoint
     if tuned_endpoint is None:
+        # 1. Within-model baseline: untuned model, zero-shot (base serves from the global endpoint).
+        infer_client = genai.Client(vertexai=True, project=project, location=infer_location)
+        base_metrics = run_eval(VertexGenAIClient(infer_client, args.model), dev)
+        record_result("1", "base-gemini", base_metrics, args.model, notes="zero-shot, no fine-tune")
+
+        # 2. Supervised fine-tune in a region.
         gcs_uri = upload_to_gcs(build_vertex_jsonl(args.n, args.jsonl), bucket,
                                 "text2sql-ladder/vertex_train.jsonl")
         tune_client = genai.Client(vertexai=True, project=project, location=tune_location)
@@ -150,8 +162,10 @@ def main() -> None:
             or getattr(job.tuned_model, "model", None)
         print(f"tuned endpoint: {tuned_endpoint}  (note: weights stay in Vertex)")
 
-    # 3. Evaluate the tuned model, zero-shot, in its region -- same inference as the baseline.
-    tuned_client = genai.Client(vertexai=True, project=project, location=tune_location)
+    # 3. Evaluate the tuned model in ITS location (parsed from the endpoint resource name; the tuned
+    #    endpoint may live in a multi-region like `us`, not the tuning region).
+    tuned_loc = _location_from_resource(tuned_endpoint, tune_location)
+    tuned_client = genai.Client(vertexai=True, project=project, location=tuned_loc)
     tuned_metrics = run_eval(VertexGenAIClient(tuned_client, tuned_endpoint), dev)
     record_result("1", "vendor-ft-gemini", tuned_metrics, args.model,
                   notes=f"SFT on Vertex, n={args.n}, epochs={args.epochs}, weights not portable")
