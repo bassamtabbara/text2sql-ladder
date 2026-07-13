@@ -46,8 +46,8 @@ def main() -> None:
     cfg = SFTConfig(
         output_dir=args.out,
         num_train_epochs=args.epochs,
-        per_device_train_batch_size=8,
-        gradient_accumulation_steps=2,
+        per_device_train_batch_size=2,   # full-parameter training: same memory care as full-FT
+        gradient_accumulation_steps=8,
         learning_rate=args.lr,
         logging_steps=20,
         bf16=True,

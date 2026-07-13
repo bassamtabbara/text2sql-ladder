@@ -12,15 +12,20 @@ sleep 3
 CPT="checkpoints/continued-pt"
 python rung2c-continued-pretrain/continued_pretrain.py --out "$CPT"
 
-# Task-tune on the shifted base and evaluate, so the comparison to 2b is apples-to-apples.
-python rung2b-full-ft/train_full.py --base "$CPT" --out checkpoints/cpt-then-sft --lr 1e-5
+# Task-tune the shifted base with QLoRA (our best method from 2a), so the comparison is to plain
+# QLoRA (73.3): did continued pretraining move the base enough to beat that?
+ADAPTER="outputs/cpt-then-qlora"
+rm -rf "$ADAPTER"
+python rung2a-qlora/train_qlora.py --base "$CPT" --out "$ADAPTER" --rank 32 --epochs 3
 
-vllm serve checkpoints/cpt-then-sft --port 8000 --max-model-len 32768 --served-model-name cpt-sft &
+vllm serve "$CPT" --port 8000 --max-model-len 32768 \
+  --enable-lora --max-lora-rank 32 --lora-modules cpt-qlora="$ADAPTER" &
 VLLM_PID=$!
 trap 'kill $VLLM_PID 2>/dev/null || true' EXIT
 until curl -sf http://localhost:8000/v1/models >/dev/null 2>&1; do sleep 3; done
 
-python -m common.eval --rung 2c --technique continued-pt --model cpt-sft \
-  --base-url http://localhost:8000/v1 --notes "cpt then sft"
+python -m common.eval --rung 2c --technique continued-pt-qlora --model cpt-qlora \
+  --base-url http://localhost:8000/v1 --notes "cpt then qlora rank32; compare vs plain qlora 73.3"
 
-echo "Rung 2c complete. For Spider this is likely marginal. The lesson is the judgment call."
+echo "Rung 2c complete. Our in-domain corpus is tiny (~1-2M tokens), so expect ~no gain over plain"
+echo "QLoRA -- which IS the lesson: continued pretraining needs massive in-domain text to matter."
