@@ -84,10 +84,11 @@ class ChatClient:
         kwargs = dict(model=self.model, messages=messages)
         max_out = overrides.get("max_tokens", self.max_tokens)
         if self._reasoning:
-            # leave room for reasoning tokens on top of the short SQL output; keep effort low since
-            # text-to-SQL doesn't need deep reasoning (faster + cheaper over 300 examples)
+            # leave room for reasoning tokens on top of the short SQL output. Effort defaults to
+            # low (fast/cheap over 300 examples); set T2S_REASONING_EFFORT=medium|high for a
+            # stronger -- and fairer -- frontier ceiling.
             kwargs["max_completion_tokens"] = max(max_out, 4096)
-            kwargs["reasoning_effort"] = "low"
+            kwargs["reasoning_effort"] = os.environ.get("T2S_REASONING_EFFORT", "low")
         else:
             kwargs["max_tokens"] = max_out
         # Reasoning models reject `temperature`; others get it only when set (None = model default).
