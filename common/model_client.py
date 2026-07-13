@@ -85,10 +85,10 @@ class ChatClient:
         max_out = overrides.get("max_tokens", self.max_tokens)
         if self._reasoning:
             # leave room for reasoning tokens on top of the short SQL output. Effort defaults to
-            # high so the frontier ceiling is a fair "best you can rent"; set
-            # T2S_REASONING_EFFORT=low|medium to trade quality for speed/cost over 300 examples.
+            # low: on Spider, high effort scored *worse* than low (77.7% vs 80.7% EX) and was ~3x
+            # slower -- more reasoning doesn't help this task. Override with T2S_REASONING_EFFORT.
             kwargs["max_completion_tokens"] = max(max_out, 4096)
-            kwargs["reasoning_effort"] = os.environ.get("T2S_REASONING_EFFORT", "high")
+            kwargs["reasoning_effort"] = os.environ.get("T2S_REASONING_EFFORT", "low")
         else:
             kwargs["max_tokens"] = max_out
         # Reasoning models reject `temperature`; others get it only when set (None = model default).
