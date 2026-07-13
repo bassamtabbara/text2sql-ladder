@@ -18,7 +18,7 @@ from common.model_client import ChatClient, build_messages, extract_sql
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", default="full-ft", help="served model name to sample from")
+    ap.add_argument("--model", default="sft", help="served model name to sample from")
     ap.add_argument("--base-url", default="http://localhost:8000/v1")
     ap.add_argument("--n-questions", type=int, default=2000)
     ap.add_argument("--samples", type=int, default=6, help="candidates per question")

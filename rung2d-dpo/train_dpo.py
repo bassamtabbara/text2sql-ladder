@@ -25,7 +25,7 @@ def load_pairs(path: str):
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--base", default="checkpoints/full-ft")
+    ap.add_argument("--base", default="checkpoints/qlora-merged")
     ap.add_argument("--pairs", default="rung2d-dpo/pairs.jsonl")
     ap.add_argument("--out", default="checkpoints/dpo")
     ap.add_argument("--beta", type=float, default=0.1)
@@ -44,14 +44,14 @@ def main() -> None:
         output_dir=args.out,
         beta=args.beta,
         num_train_epochs=1,
-        per_device_train_batch_size=4,
-        gradient_accumulation_steps=4,
+        per_device_train_batch_size=2,   # DPO holds policy + reference model, so keep it small
+        gradient_accumulation_steps=8,
         learning_rate=args.lr,
         logging_steps=10,
         bf16=True,
         gradient_checkpointing=True,
         seed=args.seed,
-        max_length=2048,
+        max_length=4096,                 # big Spider schemas live in the prompt
         report_to="none",
     )
     trainer = DPOTrainer(
