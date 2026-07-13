@@ -54,6 +54,8 @@ def main() -> None:
     ap.add_argument("--base-url", default="http://localhost:8000/v1")
     ap.add_argument("--label", default=None,
                     help="override the technique label (e.g. frontier-opus4.8); defaults to --mode")
+    ap.add_argument("--rung", default="0",
+                    help="rung id to record under (e.g. 2a to eval a fine-tuned model with RAG)")
     args = ap.parse_args()
 
     if args.mode == "zero-shot":
@@ -73,7 +75,7 @@ def main() -> None:
     client = ChatClient(model=args.model, base_url=args.base_url, temperature=temperature)
     metrics = run_eval(client, load_dev_subset(), few_shot_fn=few_shot_fn)
     technique = args.label or args.mode
-    record_result("0", technique, metrics, args.model,
+    record_result(args.rung, technique, metrics, args.model,
                   notes=f"k={args.k}" if args.mode != "zero-shot" else "")
 
 
