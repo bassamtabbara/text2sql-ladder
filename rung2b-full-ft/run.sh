@@ -3,6 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export PYTHONPATH="$PWD"
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True   # reduce fragmentation
 
 CKPT="checkpoints/full-ft"
 

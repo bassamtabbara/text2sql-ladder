@@ -66,8 +66,8 @@ def main() -> None:
     cfg = SFTConfig(
         output_dir=args.out,
         num_train_epochs=args.epochs,
-        per_device_train_batch_size=4,
-        gradient_accumulation_steps=4,
+        per_device_train_batch_size=2,   # small micro-batch: full-FT + the seq-4096 logits spike
+        gradient_accumulation_steps=8,   # effective batch stays 16
         learning_rate=args.lr,
         lr_scheduler_type="cosine",
         warmup_ratio=0.03,
