@@ -19,16 +19,17 @@ python rung0-prompting/prompt.py --mode zero-shot --model "$MODEL"
 python rung0-prompting/prompt.py --mode few-shot  --k 5 --model "$MODEL"
 python rung0-prompting/prompt.py --mode rag       --k 5 --model "$MODEL"
 
-# --- Frontier REFERENCE line (optional): Opus 4.8 with few-shot+RAG. This is "rent the best model
-#     and prompt it well" -- the ceiling the small owned model chases, NOT the fine-tuning baseline.
-#     Anthropic exposes an OpenAI-compatible endpoint, so the frozen eval works unchanged.
-if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
-  OPENAI_API_KEY="$ANTHROPIC_API_KEY" \
+# --- Frontier REFERENCE line (optional): the strongest model you can rent, few-shot+RAG. This is
+#     "rent the best and prompt it well" -- the ceiling the small owned model chases, NOT the
+#     fine-tuning baseline. Kept on OpenAI so it matches the rung-1 vendor (one vendor, apples to
+#     apples). Override the ceiling with FRONTIER_MODEL=... (e.g. gpt-4.1).
+FRONTIER_MODEL="${FRONTIER_MODEL:-gpt-4o}"
+if [ -n "${OPENAI_API_KEY:-}" ]; then
   python rung0-prompting/prompt.py --mode rag --k 5 \
-    --model claude-opus-4-8 --base-url https://api.anthropic.com/v1/ \
-    --label frontier-opus4.8
+    --model "$FRONTIER_MODEL" --base-url https://api.openai.com/v1 \
+    --label "frontier-$FRONTIER_MODEL"
 else
-  echo "(skipping frontier reference: set ANTHROPIC_API_KEY to record the Opus 4.8 ceiling)"
+  echo "(skipping frontier reference: set OPENAI_API_KEY to record the $FRONTIER_MODEL ceiling)"
 fi
 
 echo "Rung 0 complete. results/results.csv now has the base-Qwen baseline (zero/few/rag) plus,"

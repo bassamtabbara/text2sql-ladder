@@ -32,11 +32,12 @@ so these are directly comparable.
 
 | Rung | Technique | EX % | Valid-SQL % | p50 latency | Notes |
 |------|-----------|:----:|:-----------:|:-----------:|-------|
-| 0 | _frontier reference (Opus 4.8, few-shot+RAG)_ | | | | ceiling to chase, not the baseline |
+| 0 | _frontier reference (OpenAI, few-shot+RAG)_ | | | | ceiling to chase, not the baseline |
 | 0 | zero-shot (base Qwen) | | | | fine-tuning baseline |
 | 0 | few-shot (base Qwen) | | | | fine-tuning baseline |
 | 0 | few-shot + RAG (base Qwen) | | | | fine-tuning baseline |
-| 1 | vendor fine-tune | | | | |
+| 1 | base gpt-4o-mini (zero-shot) | | | | within-model FT baseline |
+| 1 | vendor fine-tune (gpt-4o-mini) | | | | lift over base-mini = what FT buys |
 | 2a | QLoRA | | | | |
 | 2b | full fine-tune | | | | |
 | 2c | continued pretrain | | | | |

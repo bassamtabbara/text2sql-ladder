@@ -47,7 +47,17 @@ def main() -> None:
 
     from openai import OpenAI
 
+    from common.data import load_dev_subset
+
     client = OpenAI()
+    dev = load_dev_subset()
+
+    # Fair within-model baseline: the SAME base model, prompted zero-shot, before any fine-tuning.
+    # The lift from this row to the fine-tuned row is the honest "what vendor fine-tuning buys"
+    # number -- same model, same vendor, same inference, so it isolates the effect of tuning.
+    base_client = ChatClient(model=args.base_model, base_url=None)
+    base_metrics = run_eval(base_client, dev)
+    record_result("1", "base-mini", base_metrics, args.base_model, notes="zero-shot, no fine-tune")
 
     ft_model = args.ft_model
     if ft_model is None:
@@ -66,11 +76,10 @@ def main() -> None:
         ft_model = job.fine_tuned_model
         print(f"fine-tuned model: {ft_model}  (note: you cannot download these weights)")
 
-    # Evaluate against OpenAI's endpoint (base_url=None -> api.openai.com).
-    from common.data import load_dev_subset
-
+    # Evaluate the fine-tuned model against OpenAI's endpoint (base_url=None -> api.openai.com),
+    # zero-shot -- same inference as the base-mini baseline above, so the delta is the FT lift.
     eval_client = ChatClient(model=ft_model, base_url=None)
-    metrics = run_eval(eval_client, load_dev_subset())
+    metrics = run_eval(eval_client, dev)
     record_result("1", "vendor-ft", metrics, ft_model,
                   notes=f"base={args.base_model}, n={args.n}, weights not portable")
 

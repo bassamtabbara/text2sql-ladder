@@ -66,9 +66,10 @@ def main() -> None:
 
     from common.data import load_dev_subset
 
-    # Greedy (temperature=0) for the vLLM base model so its numbers are deterministic. For frontier
-    # reasoning models (claude-*) temperature is rejected, so omit it and take the model default.
-    temperature = None if args.model.startswith("claude") else 0.0
+    # Greedy (temperature=0) for models that support it, so numbers are deterministic. Reasoning
+    # models (claude-*, OpenAI o-series, gpt-5) reject temperature, so omit it and take the default.
+    no_temp = args.model.startswith(("claude", "o1", "o3", "o4", "gpt-5"))
+    temperature = None if no_temp else 0.0
     client = ChatClient(model=args.model, base_url=args.base_url, temperature=temperature)
     metrics = run_eval(client, load_dev_subset(), few_shot_fn=few_shot_fn)
     technique = args.label or args.mode
