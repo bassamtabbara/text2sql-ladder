@@ -23,10 +23,16 @@ python rung0-prompting/prompt.py --mode rag       --k 5 --model "$MODEL"
 #     These are the ceilings the owned model chases, not the fine-tuning baseline. Each runs only if
 #     its key is set; each hits an OpenAI-compatible endpoint so the frozen eval works unchanged.
 #     The client reads OPENAI_API_KEY, so we set it inline to each vendor's key.
+# FRONTIER_MODES: which prompting modes to run on each frontier model. Default "rag" (just the
+# ceiling, one row per model, cheap). Set FRONTIER_MODES="zero-shot few-shot rag" for the full
+# matrix -- shows whether the prompting climb matters for strong models too (costs ~3x the API).
+FRONTIER_MODES="${FRONTIER_MODES:-rag}"
 run_frontier () {  # $1=model  $2=base_url  $3=api_key
   if [ -z "$3" ]; then echo "(skipping frontier $1: key not set)"; return; fi
-  OPENAI_API_KEY="$3" python rung0-prompting/prompt.py --mode rag --k 5 \
-    --model "$1" --base-url "$2" --label "frontier-$1"
+  for mode in $FRONTIER_MODES; do
+    OPENAI_API_KEY="$3" python rung0-prompting/prompt.py --mode "$mode" --k 5 \
+      --model "$1" --base-url "$2" --label "frontier-$1-$mode"
+  done
 }
 run_frontier "${FRONTIER_OPENAI_MODEL:-gpt-5.6-sol}"     "https://api.openai.com/v1"                                "${OPENAI_API_KEY:-}"
 run_frontier "${FRONTIER_ANTHROPIC_MODEL:-claude-opus-4-8}" "https://api.anthropic.com/v1/"                        "${ANTHROPIC_API_KEY:-}"

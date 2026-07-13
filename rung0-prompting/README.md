@@ -26,7 +26,9 @@ questions to each dev question and prepend those). `run.sh` does all three again
 then records a **frontier panel**: the same few-shot+RAG eval against each rented frontier model
 whose key is set -- `gpt-5.6-sol` (OpenAI), `claude-opus-4-8` (Anthropic), and `gemini-3.5-flash`
 (Google). Override ids with `FRONTIER_OPENAI_MODEL` / `FRONTIER_ANTHROPIC_MODEL` /
-`FRONTIER_GEMINI_MODEL`.
+`FRONTIER_GEMINI_MODEL`. By default each frontier model runs **RAG only** (the ceiling, one row
+each); set `FRONTIER_MODES="zero-shot few-shot rag"` to run the full climb on the frontier models too
+(costs ~3x the frontier API, and shows whether prompting technique even moves a strong model).
 
 **Two baselines, on purpose.** Rung 0 records two different kinds of number:
 
