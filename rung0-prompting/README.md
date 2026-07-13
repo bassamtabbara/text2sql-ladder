@@ -9,7 +9,7 @@ it from the outside.
 ways: zero-shot, few-shot (a few fixed question->SQL pairs), and RAG (retrieve the nearest training
 questions to each dev question and prepend those). `run.sh` does all three, and, if
 `OPENAI_API_KEY` is set, also records a frontier reference line (a strong OpenAI model, few-shot+RAG;
-default `gpt-5`, override with `FRONTIER_MODEL`).
+default `gpt-5.6-sol`, override with `FRONTIER_MODEL`).
 
 **Two baselines, on purpose.** Rung 0 records two different kinds of number:
 

@@ -22,29 +22,14 @@ python rung0-prompting/prompt.py --mode rag       --k 5 --model "$MODEL"
 # --- Frontier REFERENCE line (optional): the strongest model you can rent, few-shot+RAG. This is
 #     "rent the best and prompt it well" -- the ceiling the small owned model chases, NOT the
 #     fine-tuning baseline. Kept on OpenAI so it matches the rung-1 vendor (one vendor, apples to
-#     apples). By default we auto-pick the NEWEST flagship gpt-5* the account has; override with
-#     FRONTIER_MODEL=... for a specific id.
+#     apples). Override the ceiling with FRONTIER_MODEL=... for a different id.
+FRONTIER_MODEL="${FRONTIER_MODEL:-gpt-5.6-sol}"
 if [ -n "${OPENAI_API_KEY:-}" ]; then
-  if [ -z "${FRONTIER_MODEL:-}" ]; then
-    FRONTIER_MODEL="$(python - <<'PY'
-import os, json, urllib.request
-req = urllib.request.Request("https://api.openai.com/v1/models",
-    headers={"Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}"})
-data = json.load(urllib.request.urlopen(req))["data"]
-# flagship gpt-5* only: drop mini/nano and non-text (audio/realtime/image/chat) variants
-cands = [m for m in data if m["id"].startswith("gpt-5")
-         and not any(x in m["id"] for x in ("mini", "nano", "chat", "audio", "realtime", "image"))]
-cands.sort(key=lambda m: m.get("created", 0), reverse=True)   # newest first
-print(cands[0]["id"] if cands else "gpt-5")
-PY
-)"
-  fi
-  echo "Frontier ceiling model: $FRONTIER_MODEL"
   python rung0-prompting/prompt.py --mode rag --k 5 \
     --model "$FRONTIER_MODEL" --base-url https://api.openai.com/v1 \
     --label "frontier-$FRONTIER_MODEL"
 else
-  echo "(skipping frontier reference: set OPENAI_API_KEY to record the frontier ceiling)"
+  echo "(skipping frontier reference: set OPENAI_API_KEY to record the $FRONTIER_MODEL ceiling)"
 fi
 
 echo "Rung 0 complete. results/results.csv now has the base-Qwen baseline (zero/few/rag) plus,"
