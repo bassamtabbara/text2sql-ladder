@@ -3,6 +3,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export PYTHONPATH="$PWD"
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
+# clear any stray vLLM server hogging the GPU before we start
+pkill -f vllm 2>/dev/null || true
+sleep 3
 
 # 1. Serve the 2b checkpoint so we can sample candidates from it.
 vllm serve checkpoints/full-ft --port 8000 --max-model-len 32768 --served-model-name full-ft &

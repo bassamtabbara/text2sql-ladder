@@ -5,6 +5,10 @@ cd "$(dirname "$0")/.."
 export PYTHONPATH="$PWD"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True   # reduce fragmentation
 
+# clear any stray vLLM server hogging the GPU before training
+pkill -f vllm 2>/dev/null || true
+sleep 3
+
 BASE="Qwen/Qwen2.5-3B-Instruct"
 ADAPTER="outputs/qlora"
 
