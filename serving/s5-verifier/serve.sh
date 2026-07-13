@@ -7,7 +7,7 @@ export PYTHONPATH="$PWD"
 CKPT="checkpoints/full-ft"   # or checkpoints/grpo
 
 # Serve the model the pipeline talks to.
-vllm serve "$CKPT" --port 8000 --max-model-len 8192 --served-model-name dedicated &
+vllm serve "$CKPT" --port 8000 --max-model-len 32768 --served-model-name dedicated &
 VLLM_PID=$!
 trap 'kill $VLLM_PID 2>/dev/null || true' EXIT
 until curl -sf http://localhost:8000/v1/models >/dev/null 2>&1; do sleep 3; done

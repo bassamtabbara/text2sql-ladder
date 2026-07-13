@@ -7,7 +7,7 @@ export PYTHONPATH="$PWD"
 MODEL="Qwen/Qwen2.5-3B-Instruct"
 
 # Serve the base model with vLLM (OpenAI-compatible on :8000). Runs in the background.
-vllm serve "$MODEL" --port 8000 --max-model-len 8192 &
+vllm serve "$MODEL" --port 8000 --max-model-len 32768 &
 VLLM_PID=$!
 trap 'kill $VLLM_PID 2>/dev/null || true' EXIT
 # wait for the server to accept requests

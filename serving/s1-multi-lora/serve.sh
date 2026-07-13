@@ -9,7 +9,7 @@ BASE="Qwen/Qwen2.5-3B-Instruct"
 
 # Load several adapters at once. Here we show the text-to-SQL adapter alongside a second one to
 # make the point that they share a single base. Train/point the second adapter at any bounded task.
-vllm serve "$BASE" --port 8000 --max-model-len 8192 \
+vllm serve "$BASE" --port 8000 --max-model-len 32768 \
   --enable-lora --max-loras 4 --max-lora-rank 32 \
   --lora-modules sql=outputs/qlora other=outputs/qlora &
 VLLM_PID=$!

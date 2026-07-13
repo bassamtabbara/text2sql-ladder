@@ -10,7 +10,7 @@ python rung2c-continued-pretrain/continued_pretrain.py --out "$CPT"
 # Task-tune on the shifted base and evaluate, so the comparison to 2b is apples-to-apples.
 python rung2b-full-ft/train_full.py --base "$CPT" --out checkpoints/cpt-then-sft --lr 1e-5
 
-vllm serve checkpoints/cpt-then-sft --port 8000 --max-model-len 8192 --served-model-name cpt-sft &
+vllm serve checkpoints/cpt-then-sft --port 8000 --max-model-len 32768 --served-model-name cpt-sft &
 VLLM_PID=$!
 trap 'kill $VLLM_PID 2>/dev/null || true' EXIT
 until curl -sf http://localhost:8000/v1/models >/dev/null 2>&1; do sleep 3; done

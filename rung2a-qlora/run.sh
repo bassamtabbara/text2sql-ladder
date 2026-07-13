@@ -10,7 +10,7 @@ ADAPTER="outputs/qlora"
 python rung2a-qlora/train_qlora.py --base "$BASE" --out "$ADAPTER" --rank 16
 
 # Serve the base once and load the adapter on top (this is exactly the multi-LoRA pattern).
-vllm serve "$BASE" --port 8000 --max-model-len 8192 \
+vllm serve "$BASE" --port 8000 --max-model-len 32768 \
   --enable-lora --lora-modules qlora="$ADAPTER" &
 VLLM_PID=$!
 trap 'kill $VLLM_PID 2>/dev/null || true' EXIT

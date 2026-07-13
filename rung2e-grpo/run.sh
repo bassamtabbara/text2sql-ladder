@@ -10,7 +10,7 @@ BASE="checkpoints/dpo"
 
 python rung2e-grpo/train_grpo.py --base "$BASE" --out checkpoints/grpo --steps 500
 
-vllm serve checkpoints/grpo --port 8000 --max-model-len 8192 --served-model-name grpo &
+vllm serve checkpoints/grpo --port 8000 --max-model-len 32768 --served-model-name grpo &
 VLLM_PID=$!
 trap 'kill $VLLM_PID 2>/dev/null || true' EXIT
 until curl -sf http://localhost:8000/v1/models >/dev/null 2>&1; do sleep 3; done

@@ -9,7 +9,7 @@ CKPT="checkpoints/full-ft"
 python rung2b-full-ft/train_full.py --out "$CKPT" --lr 1e-5 --epochs 2
 
 # No catalog base to attach to: this checkpoint needs its own dedicated instance (serving/s2).
-vllm serve "$CKPT" --port 8000 --max-model-len 8192 --served-model-name full-ft &
+vllm serve "$CKPT" --port 8000 --max-model-len 32768 --served-model-name full-ft &
 VLLM_PID=$!
 trap 'kill $VLLM_PID 2>/dev/null || true' EXIT
 until curl -sf http://localhost:8000/v1/models >/dev/null 2>&1; do sleep 3; done

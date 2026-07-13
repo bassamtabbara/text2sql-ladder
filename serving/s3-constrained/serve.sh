@@ -7,7 +7,7 @@ export PYTHONPATH="$PWD"
 
 CKPT="checkpoints/full-ft"
 
-vllm serve "$CKPT" --port 8000 --max-model-len 8192 --served-model-name dedicated \
+vllm serve "$CKPT" --port 8000 --max-model-len 32768 --served-model-name dedicated \
   --guided-decoding-backend xgrammar &
 VLLM_PID=$!
 trap 'kill $VLLM_PID 2>/dev/null || true' EXIT

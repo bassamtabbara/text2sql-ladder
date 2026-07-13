@@ -10,7 +10,7 @@ CKPT="checkpoints/full-ft"
 
 # n-gram speculative decoding (self-speculation from the prompt); good for the repetitive,
 # schema-echoing tokens common in SQL. Swap in --speculative-model <draft> for a trained draft.
-vllm serve "$CKPT" --port 8000 --max-model-len 8192 --served-model-name dedicated \
+vllm serve "$CKPT" --port 8000 --max-model-len 32768 --served-model-name dedicated \
   --speculative-model "[ngram]" --num-speculative-tokens 5 --ngram-prompt-lookup-max 4 &
 VLLM_PID=$!
 trap 'kill $VLLM_PID 2>/dev/null || true' EXIT
