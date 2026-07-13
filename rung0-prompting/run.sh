@@ -23,7 +23,7 @@ python rung0-prompting/prompt.py --mode rag       --k 5 --model "$MODEL"
 #     "rent the best and prompt it well" -- the ceiling the small owned model chases, NOT the
 #     fine-tuning baseline. Kept on OpenAI so it matches the rung-1 vendor (one vendor, apples to
 #     apples). Override the ceiling with FRONTIER_MODEL=... (e.g. gpt-4.1).
-FRONTIER_MODEL="${FRONTIER_MODEL:-gpt-4o}"
+FRONTIER_MODEL="${FRONTIER_MODEL:-gpt-5}"
 if [ -n "${OPENAI_API_KEY:-}" ]; then
   python rung0-prompting/prompt.py --mode rag --k 5 \
     --model "$FRONTIER_MODEL" --base-url https://api.openai.com/v1 \

@@ -62,7 +62,7 @@ and point `T2S_DATA_ROOT` at it for a second eval pass.
 |-----|---------------------------|
 | `T2S_DATA_ROOT` | The dataset folder the code reads (default `data/spider`). Set this once, as in step 2. |
 | `OPENAI_API_KEY` | For rung 0's frontier reference line and for rung 1 (the vendor fine-tune). `export` it before those runs. Leave it unset for local Qwen runs; vLLM ignores the key (the client defaults to `EMPTY`). |
-| `FRONTIER_MODEL` | Optional. Which OpenAI model is the rung-0 ceiling (default `gpt-4o`; e.g. set `gpt-4.1`). |
+| `FRONTIER_MODEL` | Optional. Which OpenAI model is the rung-0 ceiling (default `gpt-5`; e.g. set `gpt-5-mini`). |
 | `T2S_BASE_URL` | Optional. A fallback eval endpoint used only if a script is invoked without `--base-url`. The rung scripts always pass `--base-url` (local vLLM at `http://localhost:8000/v1`), so you normally never set this. |
 
 So for rung 0: set `T2S_DATA_ROOT` (done in step 2) and, if you want the frontier line,
