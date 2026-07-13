@@ -99,6 +99,15 @@ Every `run.sh` ends by appending its number to `results/results.csv` via the sha
 4. When fine-tuning becomes a system you operate (rung 2e) — _link TBD_
 5. Owning inference: why the model isn't the whole product (serving) — _link TBD_
 
+## Roadmap
+
+- **BIRD track (future).** Spider is the current benchmark. BIRD (harder, real-world databases,
+  needs value + domain-knowledge grounding) is planned as a separate held-out track, paired with a
+  **frontier-class open-weights model (GLM 5.2)** rather than the 3B — because on hard, realistic
+  queries the owned model has to be frontier-class to compete, and the point is that such models are
+  *open* and therefore ownable/servable yourself. That track also exercises multi-GPU serving, so it
+  doubles as the scaled-up version of the serving rungs.
+
 ## License
 
 Code is Apache-2.0 (see [LICENSE](LICENSE)), matching the Qwen2.5 base model license. Datasets and
