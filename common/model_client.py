@@ -71,6 +71,9 @@ class ChatClient:
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
+        # OpenAI reasoning models (o-series, gpt-5) use max_completion_tokens (not max_tokens),
+        # reject temperature, and spend tokens on hidden reasoning, so they need a bigger budget.
+        self._reasoning = model.startswith(("o1", "o3", "o4", "gpt-5"))
         self.client = OpenAI(
             base_url=base_url or os.environ.get("T2S_BASE_URL"),
             # vLLM ignores the key but the SDK requires a non-empty string
@@ -78,15 +81,18 @@ class ChatClient:
         )
 
     def complete(self, messages: list[dict], **overrides) -> str:
-        kwargs = dict(
-            model=self.model,
-            messages=messages,
-            max_tokens=overrides.get("max_tokens", self.max_tokens),
-        )
-        # Some frontier models (e.g. reasoning models) reject `temperature`. Pass it only when set;
-        # temperature=None means "use the model default" and omits the field entirely.
+        kwargs = dict(model=self.model, messages=messages)
+        max_out = overrides.get("max_tokens", self.max_tokens)
+        if self._reasoning:
+            # leave room for reasoning tokens on top of the short SQL output; keep effort low since
+            # text-to-SQL doesn't need deep reasoning (faster + cheaper over 300 examples)
+            kwargs["max_completion_tokens"] = max(max_out, 4096)
+            kwargs["reasoning_effort"] = "low"
+        else:
+            kwargs["max_tokens"] = max_out
+        # Reasoning models reject `temperature`; others get it only when set (None = model default).
         temp = overrides.get("temperature", self.temperature)
-        if temp is not None:
+        if temp is not None and not self._reasoning:
             kwargs["temperature"] = temp
         resp = self.client.chat.completions.create(**kwargs)
         return resp.choices[0].message.content or ""
