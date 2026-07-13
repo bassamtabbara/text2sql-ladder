@@ -12,8 +12,9 @@ rm -rf "$ADAPTER"   # start clean so a re-run doesn't mix stale checkpoints / ol
 python rung2a-qlora/train_qlora.py --base "$BASE" --out "$ADAPTER" --rank 32 --epochs 3
 
 # Serve the base once and load the adapter on top (this is exactly the multi-LoRA pattern).
+# --max-lora-rank must be >= the adapter's rank (we trained rank 32; vLLM defaults to 16)
 vllm serve "$BASE" --port 8000 --max-model-len 32768 \
-  --enable-lora --lora-modules qlora="$ADAPTER" &
+  --enable-lora --max-lora-rank 32 --lora-modules qlora="$ADAPTER" &
 VLLM_PID=$!
 trap 'kill $VLLM_PID 2>/dev/null || true' EXIT
 until curl -sf http://localhost:8000/v1/models >/dev/null 2>&1; do sleep 3; done
