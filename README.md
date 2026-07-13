@@ -62,8 +62,10 @@ results/    run configs, logs, and the source-of-truth results table
 
 ```bash
 # 1. Provision + env (see setup/README.md for the Nebius walkthrough)
-python -m venv .venv && source .venv/bin/activate
-pip install -r setup/requirements.txt
+# Use Python 3.11 (uv fetches a standalone one; 3.12.x VMs fail the pinned resolve).
+curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+uv venv --python 3.11 .venv && source .venv/bin/activate
+uv pip install -r setup/requirements.txt
 
 # 2. Get the data (respects Spider/BIRD licenses; downloads, does not redistribute)
 bash setup/download_data.sh

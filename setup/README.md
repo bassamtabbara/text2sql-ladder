@@ -16,11 +16,22 @@ and LoRA has room to spare. Rough total cost for the full arc is 15-25 GPU-hours
 
 ## 2. Environment
 
+Use **Python 3.11**. Some pins declare `Requires-Python <=3.12`, and in PEP 440 ordering `3.12.3`
+is *greater* than `3.12`, so on a 3.12.x VM those releases get excluded and the resolve fails (pip
+misreports it, often against `openai`). `uv` gets a standalone 3.11 without touching system Python:
+
 ```bash
 git clone https://github.com/bassamtabbara/text2sql-ladder
 cd text2sql-ladder
-python3.11 -m venv .venv && source .venv/bin/activate
-pip install -r setup/requirements.txt
+
+# recommended: uv + Python 3.11
+curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+uv venv --python 3.11 .venv && source .venv/bin/activate
+uv pip install -r setup/requirements.txt
+
+# (plain venv also works IF `python3.11` is already on the box:
+#   python3.11 -m venv .venv && source .venv/bin/activate && pip install -r setup/requirements.txt )
+
 export T2S_DATA_ROOT=data/spider
 ```
 
