@@ -78,12 +78,17 @@ class ChatClient:
         )
 
     def complete(self, messages: list[dict], **overrides) -> str:
-        resp = self.client.chat.completions.create(
+        kwargs = dict(
             model=self.model,
             messages=messages,
-            temperature=overrides.get("temperature", self.temperature),
             max_tokens=overrides.get("max_tokens", self.max_tokens),
         )
+        # Some frontier models (e.g. reasoning models) reject `temperature`. Pass it only when set;
+        # temperature=None means "use the model default" and omits the field entirely.
+        temp = overrides.get("temperature", self.temperature)
+        if temp is not None:
+            kwargs["temperature"] = temp
+        resp = self.client.chat.completions.create(**kwargs)
         return resp.choices[0].message.content or ""
 
     def complete_batch(self, batch: list[list[dict]], workers: int = 8) -> list[str]:
