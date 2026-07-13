@@ -64,7 +64,7 @@ and point `T2S_DATA_ROOT` at it for a second eval pass.
 | `OPENAI_API_KEY` | rung-0 `gpt-5.6-sol` frontier row (and the optional rung-1 OpenAI "closed door" aside). Unset for local Qwen runs; vLLM ignores the key (client defaults to `EMPTY`). |
 | `ANTHROPIC_API_KEY` | rung-0 `claude-opus-4-8` frontier row. |
 | `GEMINI_API_KEY` | rung-0 `gemini-3.5-flash` frontier row (an AI Studio key). |
-| GCP creds + `GOOGLE_CLOUD_PROJECT`, `VERTEX_LOCATION`, `T2S_GCS_BUCKET` | rung-1 Gemini SFT on Vertex. Authenticate with `gcloud auth application-default login` (or a service-account JSON via `GOOGLE_APPLICATION_CREDENTIALS`); `VERTEX_LOCATION` defaults to `us-central1`; the bucket must be writable for the training JSONL. |
+| GCP creds + `GOOGLE_CLOUD_PROJECT`, `VERTEX_LOCATION`, `T2S_GCS_BUCKET` | rung-1 Gemini SFT on Vertex. Authenticate with `gcloud auth application-default login` (or a service-account JSON via `GOOGLE_APPLICATION_CREDENTIALS`); `VERTEX_LOCATION` defaults to `us-central1`; the bucket must be writable for the training JSONL. The Vertex SDK installs into a **separate venv** (`.venv-vertex`, created automatically by `rung1-vendor-ft/run.sh`) because its grpcio/protobuf pins conflict with the GPU stack. |
 | model overrides | `FRONTIER_OPENAI_MODEL` / `FRONTIER_ANTHROPIC_MODEL` / `FRONTIER_GEMINI_MODEL` (rung 0) and `VERTEX_MODEL` (rung 1). Defaults: `gpt-5.6-sol` / `claude-opus-4-8` / `gemini-3.5-flash`. |
 | `T2S_REASONING_EFFORT` | Optional. Reasoning effort for gpt-5*/o-series frontier calls (default `high`; `low`/`medium` for speed). |
 | `T2S_BASE_URL` | Optional fallback eval endpoint, used only if a script is invoked without `--base-url`. Rung scripts always pass `--base-url`, so you normally never set this. |

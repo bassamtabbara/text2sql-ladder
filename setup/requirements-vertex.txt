@@ -1,0 +1,6 @@
+# Rung 1 (Vertex SFT) dependencies. Installed into a SEPARATE venv (.venv-vertex), because the
+# Google Cloud SDK's grpcio/protobuf/google-api-core constraints conflict with the GPU stack
+# (torch/vllm) if resolved together. Rung 1 talks to a managed cloud API and needs none of that.
+# rung1-vendor-ft/run.sh creates this venv and installs these automatically.
+google-cloud-aiplatform>=1.79
+google-cloud-storage>=2.19
