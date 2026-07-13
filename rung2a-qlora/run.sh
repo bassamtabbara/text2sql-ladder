@@ -8,6 +8,7 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True   # reduce fragmentation
 BASE="Qwen/Qwen2.5-3B-Instruct"
 ADAPTER="outputs/qlora"
 
+rm -rf "$ADAPTER"   # start clean so a re-run doesn't mix stale checkpoints / old-rank shards
 python rung2a-qlora/train_qlora.py --base "$BASE" --out "$ADAPTER" --rank 32 --epochs 3
 
 # Serve the base once and load the adapter on top (this is exactly the multi-LoRA pattern).
