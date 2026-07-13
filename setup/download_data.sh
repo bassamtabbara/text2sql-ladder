@@ -19,7 +19,8 @@ if [ ! -d "$DATA_ROOT/spider" ]; then
   else echo "need pip or uv on PATH to install gdown"; exit 1; fi
   $INSTALL gdown
   # File id from the Spider website's download link. Update if the maintainers rotate it.
-  gdown --id 1TqleXec_OykOYFREKKtschzY29dUcVAQ -O "$DATA_ROOT/spider.zip"
+  # (recent gdown takes the id positionally; --id was removed)
+  gdown 1TqleXec_OykOYFREKKtschzY29dUcVAQ -O "$DATA_ROOT/spider.zip"
   unzip -q "$DATA_ROOT/spider.zip" -d "$DATA_ROOT"
   # the archive extracts to spider/; normalize just in case
   [ -d "$DATA_ROOT/spider_data" ] && mv "$DATA_ROOT/spider_data" "$DATA_ROOT/spider"
