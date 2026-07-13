@@ -12,7 +12,12 @@ mkdir -p "$DATA_ROOT"
 echo "==> Spider"
 if [ ! -d "$DATA_ROOT/spider" ]; then
   # Spider is distributed as a Google Drive zip; gdown handles the confirm-token dance.
-  pip install --quiet gdown
+  # A uv venv has no `pip`, so pick whatever installer is available.
+  if command -v pip >/dev/null 2>&1; then INSTALL="pip install --quiet";
+  elif python -m pip --version >/dev/null 2>&1; then INSTALL="python -m pip install --quiet";
+  elif command -v uv >/dev/null 2>&1; then INSTALL="uv pip install --quiet";
+  else echo "need pip or uv on PATH to install gdown"; exit 1; fi
+  $INSTALL gdown
   # File id from the Spider website's download link. Update if the maintainers rotate it.
   gdown --id 1TqleXec_OykOYFREKKtschzY29dUcVAQ -O "$DATA_ROOT/spider.zip"
   unzip -q "$DATA_ROOT/spider.zip" -d "$DATA_ROOT"
