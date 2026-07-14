@@ -13,3 +13,12 @@ rung,technique,ex,valid_sql,n,p50_latency_ms,model,notes,run_date
 0,frontier-gemini-3.5-flash-rag,0.7200,0.8300,300,2031,gemini-3.5-flash,k=5,2026-07-13
 1,base-gemini,0.8367,0.9933,300,883,gemini-3.5-flash,"zero-shot, no fine-tune",2026-07-13
 1,vendor-ft-gemini,0.8800,0.9933,300,1013,gemini-3.5-flash,"SFT on Vertex, n=2000, epochs=3, weights not portable",2026-07-13
+2a,qlora,0.6467,0.8467,300,456,qlora,rank=16,2026-07-13
+2a,qlora-rag,0.6267,0.8067,300,641,qlora,k=5,2026-07-13
+2a,qlora,0.7333,0.9367,300,412,qlora,"rank=32, completion-only, 3ep",2026-07-13
+2b,full-ft,0.7033,0.9033,300,196,full-ft,lr=1e-5,2026-07-13
+2b,full-ft,0.7033,0.9200,300,199,full-ft,"lr=2e-5, 3ep, completion-only",2026-07-13
+2b,full-ft-mixed,0.6867,0.9133,300,207,full-ft-mixed,"mix-general=1000, lr=2e-5, 3ep",2026-07-13
+2c,continued-pt-qlora,0.7200,0.9200,300,417,cpt-qlora,cpt then qlora rank32; compare vs plain qlora 73.3,2026-07-13
+2d,dpo,0.7367,0.9333,300,187,dpo,"DPO on QLoRA-merged, beta=0.1",2026-07-14
+2e,grpo,0.7400,0.9300,300,187,grpo,reward=execution,2026-07-14

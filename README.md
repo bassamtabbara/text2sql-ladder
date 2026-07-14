@@ -25,31 +25,35 @@ reproduce the number yourself.
 | 2e | GRPO (RL) | trained against a real reward | checkpoint | dedicated GPU (BYOC) |
 | S1-S5 | custom serving | constrained/spec decoding, verifier pipeline | pipeline + weights | your container only (BYOC) |
 
-## Results (filled in as each rung is run)
+## Results
 
-Numbers come from real runs on a single H100. Empty until measured. `eval.py` is frozen and shared,
-so these are directly comparable.
+Real runs on a single H100, Spider dev (300-example frozen split), via the shared frozen `eval.py`
+(directly comparable). Rung-0 frontier rows show each model's **best** prompting mode.
 
-| Rung | Technique | EX % | Valid-SQL % | p50 latency | Notes |
-|------|-----------|:----:|:-----------:|:-----------:|-------|
-| 0 | zero-shot (base Qwen) | | | | fine-tuning baseline |
-| 0 | few-shot (base Qwen) | | | | fine-tuning baseline |
-| 0 | few-shot + RAG (base Qwen) | | | | fine-tuning baseline |
-| 0 | _frontier gpt-5.6-sol (RAG)_ | | | | rented ceiling |
-| 0 | _frontier claude-opus-4-8 (RAG)_ | | | | rented ceiling |
-| 0 | _frontier gemini-3.5-flash (RAG)_ | | | | rented ceiling (same model tuned in rung 1) |
-| 1 | base-gemini (zero-shot) | | | | within-model SFT baseline |
-| 1 | vendor-ft-gemini (Vertex SFT) | | | | lift over base-gemini = what SFT buys |
-| 2a | QLoRA | | | | |
-| 2b | full fine-tune | | | | |
-| 2c | continued pretrain | | | | |
-| 2d | DPO | | | | |
-| 2e | GRPO | | | | |
-| S3 | + constrained decode | | | | |
-| S4 | + speculative decode | | | | |
-| S5 | + verifier pipeline | | | | |
+| Rung | Technique | EX % | Valid-SQL % | p50 (ms) | Notes |
+|------|-----------|:----:|:-----------:|:--------:|-------|
+| 0 | zero-shot (base Qwen-3B) | 60.3 | 85.7 | 236 | fine-tuning baseline |
+| 0 | few-shot (base Qwen-3B) | 63.3 | 87.3 | 249 | |
+| 0 | few-shot + RAG (base Qwen-3B) | 66.3 | 85.0 | 405 | best prompting on the owned model |
+| 0 | _frontier gemini-3.5-flash_ | 72.0 | 83.0 | 2031 | RAG; AI Studio (Vertex serves it at 83.7, see rung 1) |
+| 0 | _frontier gpt-5.6-sol_ | 83.7 | 100 | 3714 | zero-shot (RAG didn't help) |
+| 0 | _frontier claude-opus-4-8_ | 94.3 | 99.7 | 1992 | few-shot |
+| 1 | base-gemini (zero-shot) | 83.7 | 99.3 | 883 | untuned, on Vertex |
+| 1 | vendor-ft-gemini (Vertex SFT) | 88.0 | 99.3 | 1013 | +4.3 lift; weights stay in Vertex |
+| 2a | **QLoRA** (rank 32) | **73.3** | 93.7 | 412 | **beats prompting (66.3) — owning wins** |
+| 2b | full fine-tune | 70.3 | 92.0 | 199 | underperforms QLoRA (regularization/forgetting) |
+| 2c | continued-PT → QLoRA | 72.0 | 92.0 | 417 | no gain (tiny in-domain corpus) |
+| 2d | DPO (on QLoRA-merged) | 73.7 | 93.3 | 187 | flat (already-good model, self-sampled prefs) |
+| 2e | GRPO (execution reward) | 74.0 | 93.0 | 187 | small gain; RL is the heaviest rung |
+| S3 | + constrained decode | | | | _serving rungs: TBD_ |
+| S4 | + speculative decode | | | | _TBD_ |
+| S5 | + verifier pipeline | | | | _TBD_ |
 
-The canonical, machine-readable version lives in [`results/results.csv`](results/results.csv).
+Headline: prompting the owned 3B plateaus at 66.3; a lightweight QLoRA adapter clears it (73.3);
+heavier training (full-FT, continued-PT, DPO, RL) all cluster ~70–74 on near-solved Spider — the
+heavier methods earn their keep on harder tasks, not here. The full run-by-run log (including
+superseded attempts, e.g. the first rank-16 QLoRA that *lost* to RAG) lives in
+[`results/results.csv`](results/results.csv).
 
 ## Layout
 
