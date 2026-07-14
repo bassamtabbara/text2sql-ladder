@@ -58,17 +58,19 @@ def main() -> None:
     cfg = GRPOConfig(
         output_dir=args.out,
         learning_rate=args.lr,
-        per_device_train_batch_size=8,
+        per_device_train_batch_size=4,
         gradient_accumulation_steps=4,
         num_generations=args.num_generations,
-        max_prompt_length=1536,
+        max_prompt_length=3072,   # big Spider schemas live in the prompt (1536 truncated them)
         max_completion_length=512,
         max_steps=args.steps,
         logging_steps=5,
         bf16=True,
         gradient_checkpointing=True,
         seed=args.seed,
-        use_vllm=True,           # fast rollouts; the "keep generation and training in sync" part
+        # use_vllm=False: colocating a vLLM rollout server + the trainer on ONE gpu is the usual
+        # single-GPU OOM. HF generation is slower but robust; flip on with a dedicated rollout GPU.
+        use_vllm=False,
         report_to="none",
     )
     trainer = GRPOTrainer(

@@ -9,8 +9,9 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 pkill -f vllm 2>/dev/null || true
 sleep 3
 
-# Train from the DPO checkpoint (fall back to full-ft if you skipped 2d).
+# Train from our best available SFT/aligned checkpoint.
 BASE="checkpoints/dpo"
+[ -d "$BASE" ] || BASE="checkpoints/qlora-merged"
 [ -d "$BASE" ] || BASE="checkpoints/full-ft"
 
 python rung2e-grpo/train_grpo.py --base "$BASE" --out checkpoints/grpo --steps 500
