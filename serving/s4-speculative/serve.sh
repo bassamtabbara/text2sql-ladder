@@ -6,7 +6,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 export PYTHONPATH="$PWD"
 
-CKPT="checkpoints/full-ft"
+CKPT="checkpoints/grpo"
 
 # n-gram speculative decoding (self-speculation from the prompt); good for the repetitive,
 # schema-echoing tokens common in SQL. Swap in --speculative-model <draft> for a trained draft.

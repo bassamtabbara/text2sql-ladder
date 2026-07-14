@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 export PYTHONPATH="$PWD"
 
-CKPT="checkpoints/full-ft"   # or checkpoints/grpo
+CKPT="checkpoints/grpo"   # or checkpoints/grpo
 
 # Serve the model the pipeline talks to.
 vllm serve "$CKPT" --port 8000 --max-model-len 32768 --served-model-name dedicated &

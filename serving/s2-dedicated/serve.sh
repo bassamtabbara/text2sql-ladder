@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 export PYTHONPATH="$PWD"
 
-CKPT="checkpoints/full-ft"   # the rung-2b (or 2e) checkpoint
+CKPT="checkpoints/grpo"   # the rung-2b (or 2e) checkpoint
 
 vllm serve "$CKPT" --port 8000 --max-model-len 32768 --served-model-name dedicated &
 VLLM_PID=$!
