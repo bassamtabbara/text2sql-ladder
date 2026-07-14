@@ -42,7 +42,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="checkpoints/dpo")
     ap.add_argument("--out", default="checkpoints/grpo")
-    ap.add_argument("--num-generations", type=int, default=8, help="rollouts per prompt")
+    ap.add_argument("--num-generations", type=int, default=4, help="rollouts per prompt (smaller = faster without vLLM)")
     ap.add_argument("--lr", type=float, default=1e-6)
     ap.add_argument("--steps", type=int, default=500)
     ap.add_argument("--seed", type=int, default=0)
@@ -62,7 +62,7 @@ def main() -> None:
         gradient_accumulation_steps=4,
         num_generations=args.num_generations,
         max_prompt_length=3072,   # big Spider schemas live in the prompt (1536 truncated them)
-        max_completion_length=512,
+        max_completion_length=384,   # SQL is short; smaller cap speeds HF-gen rollouts
         max_steps=args.steps,
         logging_steps=5,
         bf16=True,
